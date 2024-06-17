@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Applications - e-Bill</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer {
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .navbar {
+            height: 70px;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tbody tr:hover {
+            background-color: #ddd;
+        }
+
+        /* Status Select Styling */
+        .status-select {
+            width: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">
+            <img src="/Style/logo.png" width="30" height="30" class="d-inline-block align-top" alt="">
+            e-Bill
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_dashboard.html">Home</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/Admin/admin_applications.html">Applications</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_complaints.html">Complaints</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_payments.html">Payments</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="logout()">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2>New Connection Applications</h2>
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Connection Type</th>
+                    <th>User Email</th>
+                    <th>Mobile</th>
+                    <th>Address</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="applicationTableBody">
+                <!-- Application data will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal for Edit Application -->
+    <div class="modal fade" id="editApplicationModal" tabindex="-1" role="dialog" aria-labelledby="editApplicationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editApplicationModalLabel">Edit Application</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editApplicationForm">
+                        <div class="form-group">
+                            <label for="editConnectionType">Connection Type</label>
+                            <input type="text" class="form-control" id="editConnectionType" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editLoggedInUserEmail">Logged-in User Email</label>
+                            <input type="email" class="form-control" id="editLoggedInUserEmail" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editContactPhone">Mobile</label>
+                            <input type="tel" class="form-control" id="editContactPhone" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editAddress">Address</label>
+                            <input type="text" class="form-control" id="editAddress" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editStatus">Status</label>
+                            <select class="form-control" id="editStatus">
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approve</option>
+                                <option value="rejected">Reject</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEdit()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer mt-5">
+        <p>&copy; 2024 e-Bill. All rights reserved.</p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Retrieve application data from localStorage
+        let applicationData = JSON.parse(localStorage.getItem('newConnectionForm')) || [];
+
+        // Function to populate the applications table
+        function populateApplicationsTable() {
+            const applicationTableBody = document.getElementById('applicationTableBody');
+            applicationTableBody.innerHTML = '';
+
+            applicationData.forEach((application, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${application.connection_type}</td>
+                    <td>${application.loggedin_user_email}</td>
+                    <td>${application.contact_phone}</td>
+                    <td>${application.address}, ${application.city}, ${application.state}, ${application.country}, ${application.zip_code}</td>
+                    <td>${application.status}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openEditModal(${index})">Edit</button>
+                    </td>
+                `;
+                applicationTableBody.appendChild(row);
+            });
+        }
+
+        // Variables to hold current editing application details
+        let currentEditingApplicationIndex = null;
+
+        // Function to open edit modal and populate data
+        function openEditModal(applicationIndex) {
+            const application = applicationData[applicationIndex];
+            if (!application) return;
+
+            currentEditingApplicationIndex = applicationIndex;
+
+            document.getElementById('editConnectionType').value = application.connection_type;
+            document.getElementById('editLoggedInUserEmail').value = application.loggedin_user_email;
+            document.getElementById('editContactPhone').value = application.contact_phone;
+            document.getElementById('editAddress').value = `${application.address}, ${application.city}, ${application.state}, ${application.country}, ${application.zip_code}`;
+            document.getElementById('editStatus').value = application.status;
+
+            $('#editApplicationModal').modal('show');
+        }
+
+        // Function to submit edit changes
+        function submitEdit() {
+            const editedStatus = document.getElementById('editStatus').value;
+
+            if (currentEditingApplicationIndex !== null) {
+                applicationData[currentEditingApplicationIndex].status = editedStatus;
+                localStorage.setItem('newConnectionForm', JSON.stringify(applicationData));
+                populateApplicationsTable(); // Refresh table after edit
+                $('#editApplicationModal').modal('hide');
+                currentEditingApplicationIndex = null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateApplicationsTable(); // Populate table on page load
+        });
+
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem('adminSession');
+            window.location.href = "/Admin/index2.html";
+        }
+    </script>
+</body>
+
+</html>

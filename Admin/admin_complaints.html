@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Complaints - e-Bill</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer {
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .navbar {
+            height: 70px;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tbody tr:hover {
+            background-color: #ddd;
+        }
+
+        /* Status Select Styling */
+        .status-select {
+            width: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">
+            <img src="/Style/logo.png" width="30" height="30" class="d-inline-block align-top" alt="">
+            e-Bill
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_dashboard.html">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_applications.html">Applications</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/Admin/admin_complaints.html">Complaints</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_payments.html">Payments</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="logout()">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2>Complaints</h2>
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Complaint Type</th>
+                    <th>Complaint Details</th>
+                    <th>User Email</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="complaintTableBody">
+                <!-- Complaint data will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal for Edit Complaint -->
+    <div class="modal fade" id="editComplaintModal" tabindex="-1" role="dialog" aria-labelledby="editComplaintModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editComplaintModalLabel">Edit Complaint</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editComplaintForm">
+                        <div class="form-group">
+                            <label for="editComplaintType">Complaint Type</label>
+                            <input type="text" class="form-control" id="editComplaintType" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editComplaintDetails">Complaint Details</label>
+                            <textarea class="form-control" id="editComplaintDetails" rows="3" readonly></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="editLoggedInUserEmail">Logged-in User Email</label>
+                            <input type="email" class="form-control" id="editLoggedInUserEmail" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editStatus">Status</label>
+                            <select class="form-control" id="editStatus">
+                                <option value="pending">Pending</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEdit()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer mt-5">
+        <p>&copy; 2024 e-Bill. All rights reserved.</p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Retrieve complaint data from localStorage
+        let complaintData = JSON.parse(localStorage.getItem('complaints')) || [];
+
+        // Function to populate the complaints table
+        function populateComplaintsTable() {
+            const complaintTableBody = document.getElementById('complaintTableBody');
+            complaintTableBody.innerHTML = '';
+
+            complaintData.forEach((complaint, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${complaint.complaint_type}</td>
+                    <td>${complaint.complaint_details}</td>
+                    <td>${complaint.loggedin_user_email}</td>
+                    <td>${complaint.status}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openEditModal(${index})">Edit</button>
+                    </td>
+                `;
+                complaintTableBody.appendChild(row);
+            });
+        }
+
+        // Variables to hold current editing complaint details
+        let currentEditingComplaintIndex = null;
+
+        // Function to open edit modal and populate data
+        function openEditModal(complaintIndex) {
+            const complaint = complaintData[complaintIndex];
+            if (!complaint) return;
+
+            currentEditingComplaintIndex = complaintIndex;
+
+            document.getElementById('editComplaintType').value = complaint.complaint_type;
+            document.getElementById('editComplaintDetails').value = complaint.complaint_details;
+            document.getElementById('editLoggedInUserEmail').value = complaint.loggedin_user_email;
+            document.getElementById('editStatus').value = complaint.status;
+
+            $('#editComplaintModal').modal('show');
+        }
+
+        // Function to submit edit changes
+        function submitEdit() {
+            const editedStatus = document.getElementById('editStatus').value;
+
+            if (currentEditingComplaintIndex !== null) {
+                complaintData[currentEditingComplaintIndex].status = editedStatus;
+                localStorage.setItem('complaints', JSON.stringify(complaintData));
+                populateComplaintsTable(); // Refresh table after edit
+                $('#editComplaintModal').modal('hide');
+                currentEditingComplaintIndex = null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateComplaintsTable(); // Populate table on page load
+        });
+
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem('adminSession');
+            window.location.href = "/Admin/index2.html";
+        }
+    </script>
+</body>
+
+</html>

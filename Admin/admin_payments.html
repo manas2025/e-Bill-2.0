@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Payments - e-Bill</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer {
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .navbar {
+            height: 70px;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tbody tr:hover {
+            background-color: #ddd;
+        }
+
+        /* Status Select Styling */
+        .status-select {
+            width: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">
+            <img src="/Style/logo.png" width="30" height="30" class="d-inline-block align-top" alt="">
+            e-Bill
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_dashboard.html">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_applications.html">Applications</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_complaints.html">Complaints</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/Admin/admin_payments.html">Payments</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="logout()">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2>Payments</h2>
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Account</th>
+                    <th>Amount</th>
+                    <th>Payment Amount</th>
+                    <th>Payment Method</th>
+                    <th>Logged-in User Email</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="paymentTableBody">
+                <!-- Payment data will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal for Edit Payment -->
+    <div class="modal fade" id="editPaymentModal" tabindex="-1" role="dialog" aria-labelledby="editPaymentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPaymentModalLabel">Edit Payment</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPaymentForm">
+                        <div class="form-group">
+                            <label for="editSelectAccount">Account</label>
+                            <input type="text" class="form-control" id="editSelectAccount" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editAmount">Amount</label>
+                            <input type="text" class="form-control" id="editAmount" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPaymentAmount">Payment Amount</label>
+                            <input type="text" class="form-control" id="editPaymentAmount" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPaymentMethod">Payment Method</label>
+                            <input type="text" class="form-control" id="editPaymentMethod" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editLoggedInUserEmail">User Email</label>
+                            <input type="email" class="form-control" id="editLoggedInUserEmail" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editStatus">Status</label>
+                            <select class="form-control" id="editStatus">
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEdit()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer mt-5">
+        <p>&copy; 2024 e-Bill. All rights reserved.</p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Retrieve payment data from localStorage
+        let paymentData = JSON.parse(localStorage.getItem('payments')) || [];
+
+        // Function to populate the payments table
+        function populatePaymentsTable() {
+            const paymentTableBody = document.getElementById('paymentTableBody');
+            paymentTableBody.innerHTML = '';
+
+            paymentData.forEach((payment, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${payment.select_account}</td>
+                    <td>${payment.amount}</td>
+                    <td>${payment.payment_amount}</td>
+                    <td>${payment.payment_method}</td>
+                    <td>${payment.loggedin_user_email}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openEditModal(${index})">Edit</button>
+                    </td>
+                `;
+                paymentTableBody.appendChild(row);
+            });
+        }
+
+        // Variables to hold current editing payment details
+        let currentEditingPaymentIndex = null;
+
+        // Function to open edit modal and populate data
+        function openEditModal(paymentIndex) {
+            const payment = paymentData[paymentIndex];
+            if (!payment) return;
+
+            currentEditingPaymentIndex = paymentIndex;
+
+            document.getElementById('editSelectAccount').value = payment.select_account;
+            document.getElementById('editAmount').value = payment.amount;
+            document.getElementById('editPaymentAmount').value = payment.payment_amount;
+            document.getElementById('editPaymentMethod').value = payment.payment_method;
+            document.getElementById('editLoggedInUserEmail').value = payment.loggedin_user_email;
+            document.getElementById('editStatus').value = payment.status;
+
+            $('#editPaymentModal').modal('show');
+        }
+
+        // Function to submit edit changes
+        function submitEdit() {
+            const editedStatus = document.getElementById('editStatus').value;
+
+            if (currentEditingPaymentIndex !== null) {
+                paymentData[currentEditingPaymentIndex].status = editedStatus;
+                localStorage.setItem('payments', JSON.stringify(paymentData));
+                populatePaymentsTable(); // Refresh table after edit
+                $('#editPaymentModal').modal('hide');
+                currentEditingPaymentIndex = null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populatePaymentsTable(); // Populate table on page load
+        });
+
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem('adminSession');
+            window.location.href = "/Admin/index2.html";
+        }
+    </script>
+</body>
+
+</html>

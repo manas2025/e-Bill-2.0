@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - e-Bill</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer {
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .navbar {
+            height: 70px;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tbody tr:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">
+            <img src="/Style/logo.png" width="30" height="30" class="d-inline-block align-top" alt="">
+            e-Bill
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin dashboard.html">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_applications.html">Applications</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_complaints.html">Complaints</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/admin_payments.html">Payments</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="logout()">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2>Registered Users</h2>
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Full Address</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                <!-- User data will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer mt-5">
+        <p>&copy; 2024 e-Bill. All rights reserved.</p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script>
+        // Fetch user data from localStorage
+        const userData = JSON.parse(localStorage.getItem('userdata')) || [];
+        
+        // Populate user table
+        const userTableBody = document.getElementById('userTableBody');
+        userData.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user.first_name}</td>
+                <td>${user.last_name}</td>
+                <td>${user.email}</td>
+                <td>${user.phone}</td>
+                <td>${user.address}, ${user.city}, ${user.state}, ${user.country}, ${user.zip}</td>
+            `;
+            userTableBody.appendChild(row);
+        });
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const adminSession = JSON.parse(sessionStorage.getItem('adminSession'));
+            if (!adminSession || !adminSession.loggedIn) {
+                window.location.href = "/Admin/index2.html";
+            }
+        });
+
+        function logout() {
+            sessionStorage.removeItem('adminSession');
+            window.location.href = "/Admin/index2.html";
+        }
+    </script>
+</body>
+
+</html>
